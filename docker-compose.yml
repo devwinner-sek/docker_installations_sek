@@ -1,0 +1,85 @@
+version: '3.1'
+
+services:
+
+   wordpress:
+     image: wordpress
+     restart: always
+     container_name: wordpress
+     ports:
+       - 8080:80
+     environment:
+       MYSQL_ROOT_PASSWORD: debhost
+       WORDPRESS_DB_HOST: mysql_db:3306
+       WORDPRESS_DB_USER: exampleuser
+       WORDPRESS_DB_PASSWORD: examplepass
+       WORDPRESS_DB_NAME: exampledb
+     volumes:
+       - /var/www/wordpress:/var/www/html
+
+  mysql_db:
+    image: mysql:5.7
+    container_name : mysql_db_traefik
+    restart: always
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: debhost
+      MYSQL_DATABASE: exampledb
+      MYSQL_USER: exampleuser
+      MYSQL_PASSWORD: examplepass
+#      MYSQL_RANDOM_ROOT_PASSWORD: '1'
+    volumes:
+      - db:/var/lib/mysql
+      - ./createncdb.sql:/docker-entrypoint-initdb.d/0_init.sql
+
+
+  mongodb_container:
+    image: mongo:latest
+    container_name: mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: mongo_user
+      MONGO_INITDB_ROOT_PASSWORD: bonjoursAAA
+    ports:
+      - 27017:27017
+    volumes:
+      - mongodb_data_container:/data/db
+
+  phpmyadmin:
+    depends_on:
+      - mysql_db
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin_traefik
+    restart: always
+    ports:
+      - '8081:80'
+    environment:
+      PMA_HOST: mysql_db
+      PMA_USER: exampleuser
+      PMA_PASSWORD:  examplepass
+      MYSQL_ROOT_PASSWORD: debhost 
+
+  ################# Installation de Nextcloud #################
+
+  nextcloud:
+    depends_on: 
+      - mysql_db
+    image: nextcloud
+    container_name: nextcloud_traefik
+    restart: always
+    environment: 
+      MYSQL_DATABASE: nextcloud
+      MYSQL_USER: nclouduser
+      MYSQL_PASSWORD: ndgcloudPA42B9
+      MYSQL_HOST: mysql_db:3306
+    ports:
+      - 8585:80
+    volumes: 
+      - nextcloud_data:/var/www/html
+
+
+volumes:
+  wordpress:
+  db:
+  nextcloud_data:
+  mongodb_data_container:
